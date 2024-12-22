@@ -2,6 +2,7 @@ package set1
 
 import (
 	"ffrancon/cryptopals-go/pkg"
+	"regexp"
 	"testing"
 )
 
@@ -66,5 +67,16 @@ func TestChallenge6(t *testing.T) {
 	}
 	if string(key) != "Terminator X: Bring the noise" {
 		t.Errorf("expected %s, got %s", "Terminator X: Bring the noise", string(key))
+	}
+}
+
+func TestChallenge7(t *testing.T) {
+	data := pkg.ReadFile("../data/7.txt")
+	bytes := pkg.Base64ToBytes(data)
+	key := []byte("YELLOW SUBMARINE")
+	decrypted := pkg.AesECBDecrypt(bytes, key)
+	reg := regexp.MustCompile(`You thought that I was weak, Boy, you're dead wrong`)
+	if !reg.Match(decrypted) {
+		t.Errorf("expected %s, got %s", reg, decrypted)
 	}
 }
