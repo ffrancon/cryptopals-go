@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"ffrancon/cryptopals-go/pkg"
-	"fmt"
 	"os"
 )
 
@@ -16,5 +15,7 @@ func main() {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Bytes())
 	}
-	fmt.Println(len(lines))
+	for _, l := range lines {
+		pkg.CountByteOccurence(l)
+	}
 }
