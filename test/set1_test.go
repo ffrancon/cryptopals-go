@@ -1,7 +1,9 @@
 package set1
 
 import (
+	"bufio"
 	"ffrancon/cryptopals-go/pkg"
+	"os"
 	"regexp"
 	"testing"
 )
@@ -78,5 +80,29 @@ func TestChallenge7(t *testing.T) {
 	reg := regexp.MustCompile(`You thought that I was weak, Boy, you're dead wrong`)
 	if !reg.Match(decrypted) {
 		t.Errorf("expected %s, got %s", reg, decrypted)
+	}
+}
+
+func TestChallenge8(t *testing.T) {
+	file, err := os.Open("../data/8.txt")
+	pkg.Check(err)
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	lines := make([][]byte, 0)
+	for scanner.Scan() {
+		txt := scanner.Text()
+		lines = append(lines, pkg.HexStrToBytes(txt))
+	}
+	score := 0
+	winner := 0
+	for i, line := range lines {
+		lineScore := pkg.ScoringECBMode(line)
+		if lineScore > score {
+			score = lineScore
+			winner = i
+		}
+	}
+	if winner != 132 {
+		t.Errorf("expected %d, got %d", 132, winner)
 	}
 }
