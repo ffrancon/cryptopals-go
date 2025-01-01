@@ -14,9 +14,19 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	lines := make([][]byte, 0)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Bytes())
+		txt := scanner.Text()
+		lines = append(lines, pkg.HexStrToBytes(txt))
 	}
-	for _, l := range lines {
-		fmt.Printf("score: %v \n", pkg.CountByteOccurence(l))
+	score := 0
+	winner := []byte{}
+	index := 0
+	for i, l := range lines {
+		lineScore := pkg.ScoringECBMode(l)
+		if lineScore > score {
+			score = lineScore
+			winner = l
+			index = i
+		}
 	}
+	fmt.Printf("winner: %s with score: %d at index: %d\n", winner, score, index)
 }

@@ -81,6 +81,26 @@ func ScoringEnglish(bytes []byte) (score float64) {
 	return score
 }
 
-func IsBetterScore(score, bestScore float64) bool {
+func IsBetterEnglishScore(score, bestScore float64) bool {
 	return bestScore == -1 || (score >= 0 && score < bestScore)
+}
+
+func ScoringECBMode(bytes []byte) int {
+	score := 1
+	chunks := ChunkBytes(bytes, 16)
+	checked := map[string]bool{}
+	for x, base := range chunks {
+		if exists := checked[string(base)]; !exists {
+			for y, compared := range chunks {
+				if exists := checked[string(compared)]; exists || x == y {
+					continue
+				}
+				if string(base) == string(compared) {
+					score++
+				}
+			}
+			checked[string(base)] = true
+		}
+	}
+	return score
 }

@@ -88,24 +88,3 @@ func TransposeBytesChunks(chunks [][]byte) [][]byte {
 	}
 	return transposed
 }
-
-func CountByteOccurence(bytes []byte) int {
-	c := 0
-	chunks := ChunkBytes(bytes, 16)
-	alr := map[string]bool{}
-	for i, refChunk := range chunks {
-		// if the byte has not been already counted
-		if _, exists := alr[string(refChunk)]; !exists {
-			alr[string(refChunk)] = true
-			// iterate over the rest of the bytes
-			for _, toCompareChunk := range chunks[i+1:] {
-				if string(refChunk) == string(toCompareChunk) {
-					c++
-				}
-			}
-		} else {
-			continue
-		}
-	}
-	return c
-}

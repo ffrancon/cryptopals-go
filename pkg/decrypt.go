@@ -17,7 +17,7 @@ func DecryptXorSingleByte(bytes []byte, index int) (m Message) {
 		byte := byte(i)
 		xor := XorSingleByte(bytes, byte)
 		score := ScoringEnglish(xor)
-		if IsBetterScore(score, m.Score) {
+		if IsBetterEnglishScore(score, m.Score) {
 			m = Message{byte, xor, score}
 		}
 	}
@@ -35,7 +35,7 @@ func DecryptXorSingleByteFromBatchFile(path string) (m Message) {
 		str := scanner.Text()
 		bytes := HexStrToBytes(str)
 		mm := DecryptXorSingleByte(bytes, 999)
-		if IsBetterScore(mm.Score, m.Score) {
+		if IsBetterEnglishScore(mm.Score, m.Score) {
 			m = mm
 		}
 	}
