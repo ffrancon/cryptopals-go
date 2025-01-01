@@ -2,8 +2,6 @@ package pkg
 
 import (
 	"errors"
-	"fmt"
-	"math"
 	"os"
 )
 
@@ -91,26 +89,23 @@ func TransposeBytesChunks(chunks [][]byte) [][]byte {
 	return transposed
 }
 
-func CountByteOccurence(bytes []byte) float64 {
-	r := 0.0
-	c := 0.0
-	alr := map[byte]bool{}
-	for i, refByte := range bytes {
+func CountByteOccurence(bytes []byte) int {
+	c := 0
+	chunks := ChunkBytes(bytes, 16)
+	alr := map[string]bool{}
+	for i, refChunk := range chunks {
 		// if the byte has not been already counted
-		if !alr[refByte] {
-			alr[refByte] = true
+		if _, exists := alr[string(refChunk)]; !exists {
+			alr[string(refChunk)] = true
 			// iterate over the rest of the bytes
-			for _, toCompareByte := range bytes[i+1:] {
-				if refByte == toCompareByte {
+			for _, toCompareChunk := range chunks[i+1:] {
+				if string(refChunk) == string(toCompareChunk) {
 					c++
 				}
 			}
 		} else {
 			continue
 		}
-		r += math.Pow(2, c)
-		c = 0.0
 	}
-	fmt.Printf("Score: %f\n", r)
-	return r
+	return c
 }
