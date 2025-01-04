@@ -33,3 +33,23 @@ func AESCBCEncrypt(plaintext, key, iv []byte) []byte {
 
 	return encrypted
 }
+
+func AESCBCDecrypt(ciphertext, key, iv []byte) []byte {
+	cipher, err := aes.NewCipher(key)
+	Check(err)
+	keySize := len(key)
+	chunks := ChunkBytes(ciphertext, keySize)
+	decrypted := make([]byte, len(ciphertext))
+	dc := make([]byte, keySize)
+
+	for i, c := range chunks {
+		cipher.Decrypt(dc, c)
+		if i == 0 {
+			copy(decrypted[:keySize], XorBytes(dc, iv))
+		} else {
+			copy(decrypted[i*keySize:], XorBytes(dc, chunks[i-1]))
+		}
+	}
+
+	return decrypted
+}
