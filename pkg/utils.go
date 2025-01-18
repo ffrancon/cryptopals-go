@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"errors"
+	"math/rand"
 	"os"
 )
 
@@ -95,4 +96,12 @@ func AddPKCS7Padding(bytes []byte, s int) []byte {
 		bytes = append(bytes, byte(pad))
 	}
 	return bytes
+}
+
+func GenerateRandomKey(s int) []byte {
+	key := make([]byte, s)
+	for i := 0; i < s; i++ {
+		key[i] = byte(rand.Intn(256))
+	}
+	return key
 }
