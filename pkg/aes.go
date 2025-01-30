@@ -4,6 +4,25 @@ import (
 	"crypto/aes"
 )
 
+func getBlockEncryptParams(key []byte, plaintext []byte) (int, []byte, [][]byte) {
+	keySize := len(key)
+	paddedPlainText := AddPKCS7Padding(plaintext, keySize)
+	chunks := ChunkBytes(paddedPlainText, keySize)
+	encrypted := make([]byte, len(paddedPlainText))
+	return keySize, encrypted, chunks
+}
+
+func AesECBEncrypt(plaintext, key []byte) []byte {
+	cipher, err := aes.NewCipher(key)
+	Check(err)
+	keySize, encrypted, chunks := getBlockEncryptParams(key, plaintext)
+
+	for i, c := range chunks {
+		cipher.Encrypt(encrypted[i*keySize:], c)
+	}
+	return encrypted
+}
+
 func AesECBDecrypt(ciphertext, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
@@ -18,10 +37,7 @@ func AesECBDecrypt(ciphertext, key []byte) []byte {
 func AESCBCEncrypt(plaintext, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	keySize := len(key)
-	paddedTxt := AddPKCS7Padding(plaintext, keySize)
-	chunks := ChunkBytes(paddedTxt, keySize)
-	encrypted := make([]byte, len(paddedTxt))
+	keySize, encrypted, chunks := getBlockEncryptParams(key, plaintext)
 
 	for i, c := range chunks {
 		if i == 0 {

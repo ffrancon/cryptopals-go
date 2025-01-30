@@ -98,7 +98,7 @@ func AddPKCS7Padding(bytes []byte, s int) []byte {
 	return bytes
 }
 
-func GenerateRandomKey(s int) []byte {
+func GenerateRandomBytes(s int) []byte {
 	key := make([]byte, s)
 	for i := 0; i < s; i++ {
 		key[i] = byte(rand.Intn(256))
