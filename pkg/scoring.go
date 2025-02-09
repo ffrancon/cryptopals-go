@@ -86,7 +86,7 @@ func IsBetterEnglishScore(score, bestScore float64) bool {
 }
 
 func ScoringECBMode(bytes []byte) int {
-	score := 1
+	score := 0
 	chunks := ChunkBytes(bytes, 16)
 	checked := map[string]bool{}
 	for x, base := range chunks {

@@ -76,7 +76,7 @@ func TestChallenge7(t *testing.T) {
 	data := pkg.ReadFile("../data/7.txt")
 	bytes := pkg.Base64ToBytes(data)
 	key := []byte("YELLOW SUBMARINE")
-	decrypted := pkg.AesECBDecrypt(bytes, key)
+	decrypted := pkg.AESECBDecrypt(bytes, key)
 	reg := regexp.MustCompile(`You thought that I was weak, Boy, you're dead wrong`)
 	if !reg.Match(decrypted) {
 		t.Errorf("expected %s, got %s", reg, decrypted)
