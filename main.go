@@ -20,7 +20,6 @@ func oracle(str string) []byte {
 	if mode == 0 {
 		fmt.Println("Encrypting with ECB")
 		return pkg.AesECBEncrypt(bytes, key)
-		// TODO encrypt with ECB
 	} else {
 		fmt.Println("Encrypting with CBC")
 		iv := pkg.GenerateRandomBytes(16)

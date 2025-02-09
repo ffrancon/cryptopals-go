@@ -16,7 +16,6 @@ func AesECBEncrypt(plaintext, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
 	keySize, encrypted, chunks := getBlockEncryptParams(key, plaintext)
-
 	for i, c := range chunks {
 		cipher.Encrypt(encrypted[i*keySize:], c)
 	}
@@ -38,7 +37,6 @@ func AESCBCEncrypt(plaintext, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
 	keySize, encrypted, chunks := getBlockEncryptParams(key, plaintext)
-
 	for i, c := range chunks {
 		if i == 0 {
 			cipher.Encrypt(encrypted[:keySize], XorBytes(c, iv))
