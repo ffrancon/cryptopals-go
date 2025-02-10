@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"crypto/aes"
-	"fmt"
 )
 
 func getBlockEncryptParams(key []byte, plaintext []byte) (int, []byte, [][]byte) {
@@ -20,7 +19,6 @@ func AESECBEncrypt(plaintext, key []byte) []byte {
 	for i, c := range chunks {
 		cipher.Encrypt(encrypted[i*keySize:], c)
 	}
-	fmt.Printf("Encrypted: %v\n", encrypted)
 	return encrypted
 }
 
