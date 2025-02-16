@@ -5,19 +5,19 @@ import (
 	"fmt"
 )
 
-func getBlockEncryptParams(key []byte, plaintext []byte) (int, []byte, [][]byte) {
+func getEncryptParams(key []byte, plaintext []byte) (int, []byte, [][]byte) {
 	keySize := len(key)
 	paddedPlainText := AddPKCS7Padding(plaintext, keySize)
-	chunks := ChunkBytes(paddedPlainText, keySize)
+	blocks := ChunkBytes(paddedPlainText, keySize)
 	encrypted := make([]byte, len(paddedPlainText))
-	return keySize, encrypted, chunks
+	return keySize, encrypted, blocks
 }
 
 func AESECBEncrypt(plaintext, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	keySize, encrypted, chunks := getBlockEncryptParams(key, plaintext)
-	for i, c := range chunks {
+	keySize, encrypted, blocks := getEncryptParams(key, plaintext)
+	for i, c := range blocks {
 		cipher.Encrypt(encrypted[i*keySize:], c)
 	}
 	fmt.Printf("Encrypted: %v\n", encrypted)
@@ -27,9 +27,9 @@ func AESECBEncrypt(plaintext, key []byte) []byte {
 func AESECBDecrypt(ciphertext, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	chunks := ChunkBytes(ciphertext, 16)
+	blocks := ChunkBytes(ciphertext, 16)
 	decrypted := make([]byte, len(ciphertext))
-	for i, c := range chunks {
+	for i, c := range blocks {
 		cipher.Decrypt(decrypted[i*16:], c)
 	}
 	return decrypted
@@ -38,8 +38,8 @@ func AESECBDecrypt(ciphertext, key []byte) []byte {
 func AESCBCEncrypt(plaintext, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	keySize, encrypted, chunks := getBlockEncryptParams(key, plaintext)
-	for i, c := range chunks {
+	keySize, encrypted, blocks := getEncryptParams(key, plaintext)
+	for i, c := range blocks {
 		if i == 0 {
 			cipher.Encrypt(encrypted[:keySize], XorBytes(c, iv))
 		} else {
@@ -54,16 +54,16 @@ func AESCBCDecrypt(ciphertext, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
 	keySize := len(key)
-	chunks := ChunkBytes(ciphertext, keySize)
+	blocks := ChunkBytes(ciphertext, keySize)
 	decrypted := make([]byte, len(ciphertext))
 	dc := make([]byte, keySize)
 
-	for i, c := range chunks {
+	for i, c := range blocks {
 		cipher.Decrypt(dc, c)
 		if i == 0 {
 			copy(decrypted[:keySize], XorBytes(dc, iv))
 		} else {
-			copy(decrypted[i*keySize:], XorBytes(dc, chunks[i-1]))
+			copy(decrypted[i*keySize:], XorBytes(dc, blocks[i-1]))
 		}
 	}
 
