@@ -12,45 +12,44 @@ func Check(e error) {
 	}
 }
 
-func ComputeHammingDistance(bytes1, bytes2 []byte) (d int, e error) {
+func CalculateHammingDistance(bytes1, bytes2 []byte) (hammingDistance int, err error) {
 	if len(bytes1) != len(bytes2) {
 		return -1, errors.New("byte arrays are not of the same length")
 	}
-	for i, b := range bytes1 {
-		xor := int(b ^ bytes2[i])
+	for i, byte := range bytes1 {
+		xor := int(byte ^ bytes2[i])
 		for xor > 0 {
-			d += xor & 1
+			hammingDistance += xor & 1
 			xor >>= 1
 		}
 	}
-	return d, nil
+	return hammingDistance, nil
 }
 
-func ComputeNormalizedHammingDistance(bytes []byte, s int) float64 {
-	raw := make([]float64, len(bytes)/s-1)
-	for i := 0; i < len(raw); i++ {
-		d, _ := ComputeHammingDistance(bytes[s*i:s*(i+1)], bytes[s*(i+1):s*(i+2)])
-		n := float64(d) / float64(s)
-		raw[i] = n
+func CalculateAverageHammingDistance(bytes []byte, bufferSize int) (averageHammingDistance float64) {
+	buffers := make([]float64, len(bytes)/bufferSize-1)
+	for i := 0; i < len(buffers); i++ {
+		hammingDistance, _ := CalculateHammingDistance(bytes[bufferSize*i:bufferSize*(i+1)], bytes[bufferSize*(i+1):bufferSize*(i+2)])
+		normalizedHammingDistance := float64(hammingDistance) / float64(bufferSize)
+		buffers[i] = normalizedHammingDistance
 	}
 	total := 0.0
-	for _, r := range raw {
-		total += r
+	for _, normalizedHammingDistance := range buffers {
+		total += normalizedHammingDistance
 	}
-	avg := total / float64(len(raw))
-	return avg
+	return total / float64(len(buffers))
 }
 
-func DetermineBestKeySize(bytes []byte, min, max int) (s int) {
-	d := float64(-1)
+func DetermineBestKeySize(bytes []byte, min, max int) (result int) {
+	hammingDistance := float64(-1)
 	for i := min; i < max; i++ {
-		nd := ComputeNormalizedHammingDistance(bytes, i)
-		if d == -1 || nd < d {
-			d = nd
-			s = i
+		averageHammingDistance := CalculateAverageHammingDistance(bytes, i)
+		if hammingDistance == -1 || averageHammingDistance < hammingDistance {
+			hammingDistance = averageHammingDistance
+			result = i
 		}
 	}
-	return s
+	return result
 }
 
 func ReadFile(path string) string {
@@ -60,10 +59,10 @@ func ReadFile(path string) string {
 }
 
 // [1, 2, 3, 4, 5, 6, 7, 8] -> [[1, 2], [3, 4], [5, 6], [7, 8]]
-func ChunkBytes(bytes []byte, s int) (chunks [][]byte) {
+func ChunkBytes(bytes []byte, size int) (chunks [][]byte) {
 	end := len(bytes)
-	for i := 0; i < end; i += s {
-		to := i + s
+	for i := 0; i < end; i += size {
+		to := i + size
 		if to > end {
 			to = end
 		}
@@ -76,32 +75,32 @@ func ChunkBytes(bytes []byte, s int) (chunks [][]byte) {
 func TransposeBytesChunks(chunks [][]byte) [][]byte {
 	chunksLength := len(chunks)
 	singleChunkLength := len(chunks[0])
-	transposed := make([][]byte, singleChunkLength)
+	transposedChunks := make([][]byte, singleChunkLength)
 	// create a new array with the length of the first chunk
 	for x := 0; x < singleChunkLength; x++ {
-		transposed[x] = make([]byte, chunksLength)
+		transposedChunks[x] = make([]byte, chunksLength)
 		// iterate over the chunks and add the byte to the new array
 		for y := 0; y < chunksLength; y++ {
 			if x < len(chunks[y]) {
-				transposed[x][y] = chunks[y][x]
+				transposedChunks[x][y] = chunks[y][x]
 			}
 		}
 	}
-	return transposed
+	return transposedChunks
 }
 
-func AddPKCS7Padding(bytes []byte, s int) []byte {
-	pad := s - len(bytes)%s
-	for i := 0; i < pad; i++ {
-		bytes = append(bytes, byte(pad))
+func AddPKCS7Padding(bytes []byte, size int) []byte {
+	paddingLength := size - len(bytes)%size
+	for i := 0; i < paddingLength; i++ {
+		bytes = append(bytes, byte(paddingLength))
 	}
 	return bytes
 }
 
-func GenerateRandomBytes(s int) []byte {
-	key := make([]byte, s)
-	for i := 0; i < s; i++ {
-		key[i] = byte(rand.Intn(256))
+func GenerateRandomBytes(size int) []byte {
+	bytes := make([]byte, size)
+	for i := 0; i < size; i++ {
+		bytes[i] = byte(rand.Intn(256))
 	}
-	return key
+	return bytes
 }
