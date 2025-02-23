@@ -4,66 +4,63 @@ import (
 	"crypto/aes"
 )
 
-func getEncryptParams(key []byte, plaintext []byte) (int, []byte, [][]byte) {
+func getEncryptParams(key []byte, rawData []byte) (int, []byte, [][]byte) {
 	keySize := len(key)
-	paddedPlainText := AddPKCS7Padding(plaintext, keySize)
-	blocks := ChunkBytes(paddedPlainText, keySize)
-	encrypted := make([]byte, len(paddedPlainText))
-	return keySize, encrypted, blocks
+	pkcs7Padded := AddPKCS7Padding(rawData, keySize)
+	blocks := ChunkBytes(pkcs7Padded, keySize)
+	output := make([]byte, len(pkcs7Padded))
+	return keySize, output, blocks
 }
 
-func AESECBEncrypt(plaintext, key []byte) []byte {
+func AESECBEncrypt(rawData, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	keySize, encrypted, blocks := getEncryptParams(key, plaintext)
+	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, c := range blocks {
-		cipher.Encrypt(encrypted[i*keySize:], c)
+		cipher.Encrypt(output[i*keySize:], c)
 	}
-	return encrypted
+	return output
 }
 
-func AESECBDecrypt(ciphertext, key []byte) []byte {
+func AESECBDecrypt(encryptedData, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	blocks := ChunkBytes(ciphertext, 16)
-	decrypted := make([]byte, len(ciphertext))
+	blocks := ChunkBytes(encryptedData, 16)
+	output := make([]byte, len(encryptedData))
 	for i, c := range blocks {
-		cipher.Decrypt(decrypted[i*16:], c)
+		cipher.Decrypt(output[i*16:], c)
 	}
-	return decrypted
+	return output
 }
 
-func AESCBCEncrypt(plaintext, key, iv []byte) []byte {
+func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
-	keySize, encrypted, blocks := getEncryptParams(key, plaintext)
-	for i, c := range blocks {
+	keySize, output, blocks := getEncryptParams(key, rawData)
+	for i, block := range blocks {
 		if i == 0 {
-			cipher.Encrypt(encrypted[:keySize], XorBytes(c, iv))
+			cipher.Encrypt(output[:keySize], XorBytes(block, iv))
 		} else {
-			cipher.Encrypt(encrypted[i*keySize:], XorBytes(c, encrypted[(i-1)*keySize:i*keySize]))
+			cipher.Encrypt(output[i*keySize:], XorBytes(block, output[(i-1)*keySize:i*keySize]))
 		}
 	}
-
-	return encrypted
+	return output
 }
 
-func AESCBCDecrypt(ciphertext, key, iv []byte) []byte {
+func AESCBCDecrypt(encryptedData, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	Check(err)
 	keySize := len(key)
-	blocks := ChunkBytes(ciphertext, keySize)
-	decrypted := make([]byte, len(ciphertext))
-	dc := make([]byte, keySize)
-
+	blocks := ChunkBytes(encryptedData, keySize)
+	output := make([]byte, len(encryptedData))
+	decryptedBlock := make([]byte, keySize)
 	for i, c := range blocks {
-		cipher.Decrypt(dc, c)
+		cipher.Decrypt(decryptedBlock, c)
 		if i == 0 {
-			copy(decrypted[:keySize], XorBytes(dc, iv))
+			copy(output[:keySize], XorBytes(decryptedBlock, iv))
 		} else {
-			copy(decrypted[i*keySize:], XorBytes(dc, blocks[i-1]))
+			copy(output[i*keySize:], XorBytes(decryptedBlock, blocks[i-1]))
 		}
 	}
-
-	return decrypted
+	return output
 }

@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-func XorBytes(b1, b2 []byte) (bytes []byte) {
-	bytes = make([]byte, len(b1))
+func XorBytes(bytes1, bytes2 []byte) (bytes []byte) {
+	bytes = make([]byte, len(bytes1))
 	for i := range bytes {
-		bytes[i] = b1[i] ^ b2[i]
+		bytes[i] = bytes1[i] ^ bytes2[i]
 	}
 	return bytes
 }
@@ -20,16 +20,15 @@ func XorSingleByte(bytes []byte, by byte) []byte {
 	return xor
 }
 
-func XorBuffers(buf1, buf2 string) string {
-	by1 := HexStrToBytes(buf1)
-	by2 := HexStrToBytes(buf2)
-	if len(by1) != len(by2) {
+func XorHexStrings(string1, string2 string) (result string) {
+	bytes1 := HexStrToBytes(string1)
+	bytes2 := HexStrToBytes(string2)
+	if len(bytes1) != len(bytes2) {
 		fmt.Println("buffers are not of the same length")
 		return ""
 	}
-	bytes := XorBytes(by1, by2)
-	result := BytesToHexStr(bytes)
-	return result
+	bytes := XorBytes(bytes1, bytes2)
+	return BytesToHexStr(bytes)
 }
 
 func XorRepeatingKey(bytes, key []byte) []byte {

@@ -21,7 +21,7 @@ func TestChallenge2(t *testing.T) {
 	buf1 := "1c0111001f010100061a024b53535009181c"
 	buf2 := "686974207468652062756c6c277320657965"
 	exp := "746865206b696420646f6e277420706c6179"
-	res := pkg.XorBuffers(buf1, buf2)
+	res := pkg.XorHexStrings(buf1, buf2)
 	if res != exp {
 		t.Errorf("expected %s, got %s", exp, res)
 	}

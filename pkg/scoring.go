@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-var freqTable = map[byte]float64{
+var charFrequencyTable = map[byte]float64{
 	'A':  0.08167, // A
 	'B':  0.01492, // B
 	'C':  0.02782, // C
@@ -63,19 +63,19 @@ func ScoringEnglish(bytes []byte) (score float64) {
 	if len(nonEnglishCharRegexp.FindAllIndex(bytes, -1)) > 0 {
 		return -1
 	}
-	charCount := make(map[byte]int)
-	for _, b := range bytes {
+	charHits := make(map[byte]int)
+	for _, byte := range bytes {
 		// convert lowercase to uppercase
-		if b >= 97 && b <= 122 {
-			charCount[b-32] = charCount[b-32] + 1
+		if byte >= 97 && byte <= 122 {
+			charHits[byte-32] = charHits[byte-32] + 1
 		} else {
-			charCount[b] = charCount[b] + 1
+			charHits[byte] = charHits[byte] + 1
 		}
 	}
 	// Chi-square test
-	for b, r := range freqTable {
-		occ := float64(charCount[b])
-		expOcc := float64(len(bytes)) * r
+	for char, avgFrequency := range charFrequencyTable {
+		occ := float64(charHits[char])
+		expOcc := float64(len(bytes)) * avgFrequency
 		score += math.Pow(occ-expOcc, 2) / expOcc
 	}
 	return score
@@ -87,19 +87,19 @@ func IsBetterEnglishScore(score, bestScore float64) bool {
 
 func ScoringECBMode(bytes []byte) int {
 	score := 0
-	chunks := ChunkBytes(bytes, 16)
-	checked := map[string]bool{}
-	for x, base := range chunks {
-		if exists := checked[string(base)]; !exists {
-			for y, compared := range chunks {
-				if exists := checked[string(compared)]; exists || x == y {
+	blocks := ChunkBytes(bytes, 16)
+	areBlocksChecked := map[string]bool{}
+	for x, base := range blocks {
+		if exists := areBlocksChecked[string(base)]; !exists {
+			for y, compared := range blocks {
+				if exists := areBlocksChecked[string(compared)]; exists || x == y {
 					continue
 				}
 				if string(base) == string(compared) {
 					score++
 				}
 			}
-			checked[string(base)] = true
+			areBlocksChecked[string(base)] = true
 		}
 	}
 	return score
