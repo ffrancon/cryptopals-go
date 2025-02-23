@@ -90,6 +90,9 @@ func TransposeBytesChunks(chunks [][]byte) [][]byte {
 }
 
 func AddPKCS7Padding(bytes []byte, size int) []byte {
+	if len(bytes)%size == 0 {
+		return bytes
+	}
 	paddingLength := size - len(bytes)%size
 	for i := 0; i < paddingLength; i++ {
 		bytes = append(bytes, byte(paddingLength))

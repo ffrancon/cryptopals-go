@@ -85,9 +85,9 @@ func IsBetterEnglishScore(score, bestScore float64) bool {
 	return bestScore == -1 || (score >= 0 && score < bestScore)
 }
 
-func ScoringECBMode(bytes []byte) int {
+func ScoringECBMode(bytes []byte, keysize int) int {
 	score := 0
-	blocks := ChunkBytes(bytes, 16)
+	blocks := ChunkBytes(bytes, keysize)
 	areBlocksChecked := map[string]bool{}
 	for x, base := range blocks {
 		if exists := areBlocksChecked[string(base)]; !exists {

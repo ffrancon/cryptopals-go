@@ -25,7 +25,7 @@ func AESECBOrCBCOracle(str string) string {
 		encrypted = append(encrypted, AESCBCEncrypt(bytes, key, iv)...)
 	}
 
-	if ScoringECBMode(encrypted) > 0 {
+	if ScoringECBMode(encrypted, 16) > 0 {
 		return "ECB"
 	}
 	return "CBC"

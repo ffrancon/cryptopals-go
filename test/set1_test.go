@@ -96,7 +96,7 @@ func TestChallenge8(t *testing.T) {
 	score := 0
 	winner := 0
 	for i, line := range lines {
-		lineScore := pkg.ScoringECBMode(line)
+		lineScore := pkg.ScoringECBMode(line, 16)
 		if lineScore > score {
 			score = lineScore
 			winner = i
