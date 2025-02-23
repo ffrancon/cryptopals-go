@@ -5,26 +5,26 @@ import (
 	"os"
 )
 
-type Message struct {
+type ScoredMessage struct {
 	Key       byte
 	Decrypted []byte
 	Score     float64
 }
 
-func DecryptXorSingleByte(bytes []byte, index int) (message Message) {
+func DecryptXorSingleByte(bytes []byte, index int) (message ScoredMessage) {
 	message.Score = -1
 	for i := range 256 {
 		byte := byte(i)
 		xor := XorSingleByte(bytes, byte)
 		score := ScoringEnglish(xor)
 		if IsBetterEnglishScore(score, message.Score) {
-			message = Message{byte, xor, score}
+			message = ScoredMessage{byte, xor, score}
 		}
 	}
 	return message
 }
 
-func DecryptXorSingleByteFromBatchFile(path string) (message Message) {
+func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 	file, err := os.Open(path)
 	Check(err)
 	defer file.Close()
