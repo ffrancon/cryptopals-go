@@ -17,7 +17,7 @@ func encryptWithSecretString(bytes, key []byte) []byte {
 
 }
 
-func findBlockKeySize(bytes []byte) int {
+func findBlockCipherKeySize(bytes []byte) int {
 	previousOutputLength := 0
 	toIterateIn := make([]byte, 0)
 	for i := 0; i < len(bytes); i++ {
@@ -33,37 +33,33 @@ func findBlockKeySize(bytes []byte) int {
 }
 
 func main() {
-	plaintext := "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-	byteData := []byte(plaintext)
-	keysize := findBlockKeySize(byteData)
+	// Find keysize and encryption mode
+	ECBTestString := []byte("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	keysize := findBlockCipherKeySize(ECBTestString)
 	fmt.Printf("The key size is: %d\n", keysize)
-	isECBMode := pkg.ScoringECBMode(pkg.AESECBEncrypt(byteData, key), keysize) > 0
-	if isECBMode {
-		fmt.Println("The encryption mode is ECB")
-	} else {
+	isECBMode := pkg.ScoringECBMode(pkg.AESECBEncrypt(ECBTestString, key), keysize) > 0
+	if !isECBMode {
 		fmt.Println("The encryption mode is CBC")
+		return
 	}
 
-	// This block is one byte short of the keysize
-	crackBlock := make([]byte, keysize-1)
-	for i := 0; i < keysize-1; i++ {
-		crackBlock[i] = 97
-	}
-
-	// The last byte of the block will be the first byte of the secret string
-	encryptedCrackBlock := encryptWithSecretString(crackBlock, key)[:keysize]
-	// We will create a dictionary with all the possible values for the last byte of the block
-	dictionary := make(map[byte][]byte)
-	for i := 0; i < 256; i++ {
-		extendedCrackBlock := append(crackBlock, byte(i))
-		dictionary[byte(i)] = pkg.AESECBEncrypt(extendedCrackBlock, key)
-	}
-	firstByte := byte(0)
-	for d := range dictionary {
-		if bytes.Equal(dictionary[d], encryptedCrackBlock) {
-			firstByte = d
-			break
+	brokenMessage := make([]byte, keysize)
+	// We will iterate over the keysize in a single block to break the secret string byte by byte
+	for k := 0; k < keysize; k++ {
+		// This block is i byte(s) short of the keysize
+		block := make([]byte, keysize-1-k)
+		encryptedBlock := encryptWithSecretString(block, key)[:keysize]
+		// We will test all the possible values for the last byte of the block until we find the one that matches the encrypted block
+		for j := 0; j < 256; j++ {
+			fullBlock := append(block, brokenMessage[:k]...)
+			fullBlock = append(fullBlock, byte(j))
+			encryptedFullBlock := pkg.AESECBEncrypt(fullBlock, key)
+			if bytes.Equal(encryptedBlock, encryptedFullBlock[:keysize]) {
+				brokenMessage[k] = byte(j)
+				break
+			}
 		}
 	}
-	fmt.Printf("First letter of the secret string is: %s\n", string(firstByte))
+
+	fmt.Printf("First block of the secret string is: %s\n", brokenMessage)
 }
