@@ -2,12 +2,13 @@ package tests
 
 import (
 	"ffrancon/cryptopals-go/pkg"
+	"ffrancon/cryptopals-go/utils"
 	"regexp"
 	"testing"
 )
 
 func TestChallenge9(t *testing.T) {
-	res := pkg.AddPKCS7Padding([]byte("YELLOW SUBMARINE"), 20)
+	res := utils.AddPKCS7Padding([]byte("YELLOW SUBMARINE"), 20)
 	exp := "YELLOW SUBMARINE\x04\x04\x04\x04"
 	if string(res) != exp {
 		t.Errorf("expected %s, got %s", exp, res)
@@ -15,7 +16,7 @@ func TestChallenge9(t *testing.T) {
 }
 
 func TestChallenge10(t *testing.T) {
-	data := pkg.ReadFile("../data/10.txt")
+	data := utils.ReadFile("../data/10.txt")
 	bytes := pkg.Base64ToBytes(data)
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)

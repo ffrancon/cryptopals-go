@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"bufio"
+	"ffrancon/cryptopals/utils"
 	"os"
 )
 
@@ -26,7 +27,7 @@ func DecryptXorSingleByte(bytes []byte, index int) (message ScoredMessage) {
 
 func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 	file, err := os.Open(path)
-	Check(err)
+	utils.Check(err)
 	defer file.Close()
 
 	message.Score = -1
@@ -39,7 +40,7 @@ func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 			message = decryptedStr
 		}
 	}
-	Check(scanner.Err())
+	utils.Check(scanner.Err())
 
 	return message
 }

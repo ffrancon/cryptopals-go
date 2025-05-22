@@ -3,11 +3,12 @@ package pkg
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"ffrancon/cryptopals/utils"
 )
 
 func HexStrToBytes(str string) []byte {
 	bytes, err := hex.DecodeString(str)
-	Check(err)
+	utils.Check(err)
 	return bytes
 }
 
@@ -24,6 +25,6 @@ func HexStrToBase64(str string) []byte {
 
 func Base64ToBytes(data string) []byte {
 	bytes, err := base64.StdEncoding.DecodeString(data)
-	Check(err)
+	utils.Check(err)
 	return bytes
 }

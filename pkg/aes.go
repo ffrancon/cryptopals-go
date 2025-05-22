@@ -2,19 +2,20 @@ package pkg
 
 import (
 	"crypto/aes"
+	"ffrancon/cryptopals/utils"
 )
 
 func getEncryptParams(key []byte, rawData []byte) (int, []byte, [][]byte) {
 	keySize := len(key)
-	pkcs7Padded := AddPKCS7Padding(rawData, keySize)
-	blocks := ChunkBytes(pkcs7Padded, keySize)
+	pkcs7Padded := utils.AddPKCS7Padding(rawData, keySize)
+	blocks := utils.ChunkBytes(pkcs7Padded, keySize)
 	output := make([]byte, len(pkcs7Padded))
 	return keySize, output, blocks
 }
 
 func AESECBEncrypt(rawData, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
-	Check(err)
+	utils.Check(err)
 	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, c := range blocks {
 		cipher.Encrypt(output[i*keySize:], c)
@@ -24,8 +25,8 @@ func AESECBEncrypt(rawData, key []byte) []byte {
 
 func AESECBDecrypt(encryptedData, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
-	Check(err)
-	blocks := ChunkBytes(encryptedData, 16)
+	utils.Check(err)
+	blocks := utils.ChunkBytes(encryptedData, 16)
 	output := make([]byte, len(encryptedData))
 	for i, c := range blocks {
 		cipher.Decrypt(output[i*16:], c)
@@ -35,7 +36,7 @@ func AESECBDecrypt(encryptedData, key []byte) []byte {
 
 func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
-	Check(err)
+	utils.Check(err)
 	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, block := range blocks {
 		if i == 0 {
@@ -49,9 +50,9 @@ func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 
 func AESCBCDecrypt(encryptedData, key, iv []byte) []byte {
 	cipher, err := aes.NewCipher(key)
-	Check(err)
+	utils.Check(err)
 	keySize := len(key)
-	blocks := ChunkBytes(encryptedData, keySize)
+	blocks := utils.ChunkBytes(encryptedData, keySize)
 	output := make([]byte, len(encryptedData))
 	decryptedBlock := make([]byte, keySize)
 	for i, c := range blocks {

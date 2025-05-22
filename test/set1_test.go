@@ -3,6 +3,7 @@ package tests
 import (
 	"bufio"
 	"ffrancon/cryptopals-go/pkg"
+	"ffrancon/cryptopals-go/utils"
 	"os"
 	"regexp"
 	"testing"
@@ -54,14 +55,14 @@ func TestChallenge5(t *testing.T) {
 }
 
 func TestChallenge6(t *testing.T) {
-	data := pkg.ReadFile("../data/6.txt")
+	data := utils.ReadFile("../data/6.txt")
 	bytes := pkg.Base64ToBytes(data)
-	ks := pkg.DetermineBestKeySize(bytes, 2, 40)
+	ks := utils.DetermineBestKeySize(bytes, 2, 40)
 	if ks != 29 {
 		t.Errorf("expected %d, got %d", 29, ks)
 	}
-	chunks := pkg.ChunkBytes(bytes, ks)
-	transposed := pkg.TransposeBytesChunks(chunks)
+	chunks := utils.ChunkBytes(bytes, ks)
+	transposed := utils.TransposeBytesChunks(chunks)
 	key := make([]byte, ks)
 	for x := range transposed {
 		m := pkg.DecryptXorSingleByte(transposed[x], x)
@@ -73,7 +74,7 @@ func TestChallenge6(t *testing.T) {
 }
 
 func TestChallenge7(t *testing.T) {
-	data := pkg.ReadFile("../data/7.txt")
+	data := utils.ReadFile("../data/7.txt")
 	bytes := pkg.Base64ToBytes(data)
 	key := []byte("YELLOW SUBMARINE")
 	decrypted := pkg.AESECBDecrypt(bytes, key)
@@ -85,7 +86,7 @@ func TestChallenge7(t *testing.T) {
 
 func TestChallenge8(t *testing.T) {
 	file, err := os.Open("../data/8.txt")
-	pkg.Check(err)
+	utils.Check(err)
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	lines := make([][]byte, 0)
