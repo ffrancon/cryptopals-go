@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"ffrancon/cryptopals-go/encoding"
 	"ffrancon/cryptopals-go/pkg"
 	"fmt"
+	"os"
 )
 
 // [49 246 193 241 155 103 45 91 5 172 204 196 147 234 106 133]
@@ -11,7 +13,11 @@ var key = []byte{49, 246, 193, 241, 155, 103, 45, 91, 5, 172, 204, 196, 147, 234
 var b64SecretString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
 
 func encryptWithSecretString(bytes, key []byte) []byte {
-	decodedSecretString := pkg.Base64ToBytes(b64SecretString)
+	decodedSecretString, err := encoding.Base64ToBytes(b64SecretString)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error converting base64 string to bytes: %v\n", err)
+		os.Exit(1)
+	}
 	combinedBytes := append(bytes, decodedSecretString...)
 	return pkg.AESECBEncrypt(combinedBytes, key)
 

@@ -6,12 +6,6 @@ import (
 	"os"
 )
 
-func Check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func CalculateHammingDistance(bytes1, bytes2 []byte) (hammingDistance int, err error) {
 	if len(bytes1) != len(bytes2) {
 		return -1, errors.New("byte arrays are not of the same length")
@@ -54,7 +48,9 @@ func DetermineBestKeySize(bytes []byte, min, max int) (result int) {
 
 func ReadFile(path string) string {
 	bytes, err := os.ReadFile(path)
-	Check(err)
+	if err != nil {
+		panic(err)
+	}
 	return string(bytes)
 }
 

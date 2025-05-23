@@ -2,7 +2,9 @@ package pkg
 
 import (
 	"bufio"
+	"ffrancon/cryptopals/encoding"
 	"ffrancon/cryptopals/utils"
+	"fmt"
 	"os"
 )
 
@@ -34,7 +36,11 @@ func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		str := scanner.Text()
-		bytes := HexStrToBytes(str)
+		bytes, err := encoding.HexStrToBytes(str)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error converting hex string to bytes:", err)
+			os.Exit(1)
+		}
 		decryptedStr := DecryptXorSingleByte(bytes, 999)
 		if IsBetterEnglishScore(decryptedStr.Score, message.Score) {
 			message = decryptedStr

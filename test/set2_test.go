@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"ffrancon/cryptopals-go/encoding"
 	"ffrancon/cryptopals-go/pkg"
 	"ffrancon/cryptopals-go/utils"
 	"regexp"
@@ -17,7 +18,10 @@ func TestChallenge9(t *testing.T) {
 
 func TestChallenge10(t *testing.T) {
 	data := utils.ReadFile("../data/10.txt")
-	bytes := pkg.Base64ToBytes(data)
+	bytes, err := encoding.Base64ToBytes(data)
+	if err != nil {
+		t.Errorf("error converting base64 to bytes: %v", err)
+	}
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)
 	decrypted := pkg.AESCBCDecrypt(bytes, key, iv)
