@@ -2,8 +2,6 @@ package pkg
 
 import (
 	"bufio"
-	"ffrancon/cryptopals/encoding"
-	"ffrancon/cryptopals/utils"
 	"fmt"
 	"os"
 )
@@ -21,7 +19,11 @@ func DecryptXorSingleByte(bytes []byte, index int) (message ScoredMessage) {
 		xor := XorSingleByte(bytes, byte)
 		score := ScoringEnglish(xor)
 		if IsBetterEnglishScore(score, message.Score) {
-			message = ScoredMessage{byte, xor, score}
+			message = ScoredMessage{
+				Key:       byte,
+				Decrypted: xor,
+				Score:     score,
+			}
 		}
 	}
 	return message
@@ -29,14 +31,16 @@ func DecryptXorSingleByte(bytes []byte, index int) (message ScoredMessage) {
 
 func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 	file, err := os.Open(path)
-	utils.Check(err)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error opening file:", err)
+		os.Exit(1)
+	}
 	defer file.Close()
-
 	message.Score = -1
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		str := scanner.Text()
-		bytes, err := encoding.HexStrToBytes(str)
+		bytes, err := HexStrToBytes(str)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error converting hex string to bytes:", err)
 			os.Exit(1)
@@ -46,7 +50,11 @@ func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 			message = decryptedStr
 		}
 	}
-	utils.Check(scanner.Err())
+	err = scanner.Err()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading file:", err)
+		os.Exit(1)
+	}
 
 	return message
 }

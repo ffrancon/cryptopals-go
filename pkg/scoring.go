@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"ffrancon/cryptopals/utils"
 	"math"
 	"regexp"
 )
@@ -61,34 +60,35 @@ var nonEnglishCharRegexp = regexp.MustCompile(`[^a-zA-Z0-9\s\r!?":;.,'-]`)
 
 func ScoringEnglish(bytes []byte) (score float64) {
 	// eliminate non-english characters
-	if len(nonEnglishCharRegexp.FindAllIndex(bytes, -1)) > 0 {
+	if nonEnglishCharRegexp.Match(bytes) {
 		return -1
 	}
-	charHits := make(map[byte]int)
+	hits := make(map[byte]int)
 	for _, byte := range bytes {
-		// convert lowercase to uppercase
-		if byte >= 97 && byte <= 122 {
-			charHits[byte-32] = charHits[byte-32] + 1
-		} else {
-			charHits[byte] = charHits[byte] + 1
+		switch {
+		case byte >= 97 && byte <= 122:
+			// convert lowercase to uppercase
+			hits[byte-32] = hits[byte-32] + 1
+		default:
+			hits[byte] = hits[byte] + 1
 		}
 	}
 	// Chi-square test
 	for char, avgFrequency := range charFrequencyTable {
-		occ := float64(charHits[char])
+		occ := float64(hits[char])
 		expOcc := float64(len(bytes)) * avgFrequency
 		score += math.Pow(occ-expOcc, 2) / expOcc
 	}
 	return score
 }
 
-func IsBetterEnglishScore(score, bestScore float64) bool {
-	return bestScore == -1 || (score >= 0 && score < bestScore)
+func IsBetterEnglishScore(score, best float64) bool {
+	return best == -1 || (score >= 0 && score < best)
 }
 
 func ScoringECBMode(bytes []byte, keysize int) int {
 	score := 0
-	blocks := utils.ChunkBytes(bytes, keysize)
+	blocks := ChunkBytes(bytes, keysize)
 	areBlocksChecked := map[string]bool{}
 	for x, base := range blocks {
 		if exists := areBlocksChecked[string(base)]; !exists {

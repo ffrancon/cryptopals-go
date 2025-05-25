@@ -2,9 +2,7 @@ package tests
 
 import (
 	"bufio"
-	"ffrancon/cryptopals-go/encoding"
 	"ffrancon/cryptopals-go/pkg"
-	"ffrancon/cryptopals-go/utils"
 	"os"
 	"regexp"
 	"testing"
@@ -13,7 +11,7 @@ import (
 func TestChallenge1(t *testing.T) {
 	hex := "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
 	exp := "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
-	res, err := encoding.HexStrToBase64(hex)
+	res, err := pkg.HexStrToBase64(hex)
 	if string(res) != exp || err != nil {
 		t.Errorf("expected %s, got %s", exp, res)
 	}
@@ -30,7 +28,10 @@ func TestChallenge2(t *testing.T) {
 }
 
 func TestChallenge3(t *testing.T) {
-	bytes := pkg.HexStrToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
+	bytes, err := pkg.HexStrToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
+	if err != nil {
+		t.Errorf("Error converting hex string to bytes: %v", err)
+	}
 	m := "Cooking MC's like a pound of bacon"
 	key := byte(88)
 	res := pkg.DecryptXorSingleByte(bytes, 0)
@@ -56,14 +57,17 @@ func TestChallenge5(t *testing.T) {
 }
 
 func TestChallenge6(t *testing.T) {
-	data := utils.ReadFile("../data/6.txt")
-	bytes := pkg.Base64ToBytes(data)
-	ks := utils.DetermineBestKeySize(bytes, 2, 40)
+	data := pkg.ReadFile("../data/6.txt")
+	bytes, err := pkg.Base64ToBytes(data)
+	if err != nil {
+		t.Errorf("Error converting base64 string to bytes: %v", err)
+	}
+	ks := pkg.DetermineBestKeySize(bytes, 2, 40)
 	if ks != 29 {
 		t.Errorf("expected %d, got %d", 29, ks)
 	}
-	chunks := utils.ChunkBytes(bytes, ks)
-	transposed := utils.TransposeBytesChunks(chunks)
+	chunks := pkg.ChunkBytes(bytes, ks)
+	transposed := pkg.TransposeBytesChunks(chunks)
 	key := make([]byte, ks)
 	for x := range transposed {
 		m := pkg.DecryptXorSingleByte(transposed[x], x)
@@ -75,8 +79,11 @@ func TestChallenge6(t *testing.T) {
 }
 
 func TestChallenge7(t *testing.T) {
-	data := utils.ReadFile("../data/7.txt")
-	bytes := pkg.Base64ToBytes(data)
+	data := pkg.ReadFile("../data/7.txt")
+	bytes, err := pkg.Base64ToBytes(data)
+	if err != nil {
+		t.Errorf("Error converting base64 string to bytes: %v", err)
+	}
 	key := []byte("YELLOW SUBMARINE")
 	decrypted := pkg.AESECBDecrypt(bytes, key)
 	reg := regexp.MustCompile(`You thought that I was weak, Boy, you're dead wrong`)
@@ -87,13 +94,19 @@ func TestChallenge7(t *testing.T) {
 
 func TestChallenge8(t *testing.T) {
 	file, err := os.Open("../data/8.txt")
-	utils.Check(err)
+	if err != nil {
+		t.Fatalf("Error opening file: %v", err)
+	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 	lines := make([][]byte, 0)
 	for scanner.Scan() {
 		txt := scanner.Text()
-		lines = append(lines, pkg.HexStrToBytes(txt))
+		bytes, err := pkg.HexStrToBytes(txt)
+		if err != nil {
+			t.Errorf("Error converting hex string to bytes: %v", err)
+		}
+		lines = append(lines, bytes)
 	}
 	score := 0
 	winner := 0
