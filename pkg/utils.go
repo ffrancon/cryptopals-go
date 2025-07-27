@@ -58,10 +58,7 @@ func ReadFile(path string) string {
 func ChunkBytes(bytes []byte, size int) (chunks [][]byte) {
 	end := len(bytes)
 	for i := 0; i < end; i += size {
-		to := i + size
-		if to > end {
-			to = end
-		}
+		to := min(i+size, end)
 		chunks = append(chunks, bytes[i:to])
 	}
 	return chunks

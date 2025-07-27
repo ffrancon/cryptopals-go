@@ -15,7 +15,7 @@ func getEncryptParams(key []byte, rawData []byte) (int, []byte, [][]byte) {
 	return keySize, output, blocks
 }
 
-func getAESCipher(key []byte) (cipher cipher.Block) {
+func AESCipher(key []byte) (cipher cipher.Block) {
 	cipher, err := aes.NewCipher(key)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating AES cipher: %v\n", err)
@@ -25,7 +25,7 @@ func getAESCipher(key []byte) (cipher cipher.Block) {
 }
 
 func AESECBEncrypt(rawData, key []byte) []byte {
-	cipher := getAESCipher(key)
+	cipher := AESCipher(key)
 	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, c := range blocks {
 		cipher.Encrypt(output[i*keySize:], c)
@@ -34,7 +34,7 @@ func AESECBEncrypt(rawData, key []byte) []byte {
 }
 
 func AESECBDecrypt(encryptedData, key []byte) []byte {
-	cipher := getAESCipher(key)
+	cipher := AESCipher(key)
 	blocks := ChunkBytes(encryptedData, 16)
 	output := make([]byte, len(encryptedData))
 	for i, c := range blocks {
@@ -44,7 +44,7 @@ func AESECBDecrypt(encryptedData, key []byte) []byte {
 }
 
 func AESCBCEncrypt(rawData, key, iv []byte) []byte {
-	cipher := getAESCipher(key)
+	cipher := AESCipher(key)
 	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, block := range blocks {
 		switch i {
@@ -58,7 +58,7 @@ func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 }
 
 func AESCBCDecrypt(encryptedData, key, iv []byte) []byte {
-	cipher := getAESCipher(key)
+	cipher := AESCipher(key)
 	keySize := len(key)
 	blocks := ChunkBytes(encryptedData, keySize)
 	output := make([]byte, len(encryptedData))
