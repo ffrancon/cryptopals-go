@@ -22,7 +22,11 @@ func encryptWithSecretString(bytes, key []byte) []byte {
 
 }
 
-func findBlockCipherKeySize(bytes []byte) int {
+func findBlockCipherKeySize(bytes, key []byte) int {
+	if len(bytes) < len(key)*2 {
+		fmt.Fprintf(os.Stderr, "Input bytes length must be at least twice the key length\n")
+		os.Exit(1)
+	}
 	prevLen := 0
 	slice := make([]byte, 0)
 	for i := range bytes {
@@ -39,8 +43,8 @@ func findBlockCipherKeySize(bytes []byte) int {
 
 func main() {
 	// Find keysize and encryption mode
-	ECBTestString := []byte("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-	keysize := findBlockCipherKeySize(ECBTestString)
+	ECBTestString := bytes.Repeat([]byte("A"), 32)
+	keysize := findBlockCipherKeySize(ECBTestString, key)
 
 	// Check if the encryption mode is ECB
 	isECBMode := pkg.ScoringECBMode(pkg.AESECBEncrypt(ECBTestString, key), keysize) > 0
