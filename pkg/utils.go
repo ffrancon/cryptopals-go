@@ -22,7 +22,7 @@ func CalculateHammingDistance(bytes1, bytes2 []byte) (hammingDistance int, err e
 
 func CalculateAverageHammingDistance(bytes []byte, bufferSize int) (averageHammingDistance float64) {
 	buffers := make([]float64, len(bytes)/bufferSize-1)
-	for i := 0; i < len(buffers); i++ {
+	for i := range buffers {
 		hammingDistance, _ := CalculateHammingDistance(bytes[bufferSize*i:bufferSize*(i+1)], bytes[bufferSize*(i+1):bufferSize*(i+2)])
 		normalizedHammingDistance := float64(hammingDistance) / float64(bufferSize)
 		buffers[i] = normalizedHammingDistance
@@ -78,7 +78,7 @@ func TransposeBytesChunks(chunks [][]byte) [][]byte {
 	singleChunkLength := len(chunks[0])
 	transposedChunks := make([][]byte, singleChunkLength)
 	// create a new array with the length of the first chunk
-	for x := 0; x < singleChunkLength; x++ {
+	for x := range singleChunkLength {
 		transposedChunks[x] = make([]byte, chunksLength)
 		// iterate over the chunks and add the byte to the new array
 		for y := 0; y < chunksLength; y++ {
@@ -95,7 +95,7 @@ func AddPKCS7Padding(bytes []byte, size int) []byte {
 		return bytes
 	}
 	paddingLength := size - len(bytes)%size
-	for i := 0; i < paddingLength; i++ {
+	for range paddingLength {
 		bytes = append(bytes, byte(paddingLength))
 	}
 	return bytes
@@ -103,7 +103,7 @@ func AddPKCS7Padding(bytes []byte, size int) []byte {
 
 func GenerateRandomBytes(size int) []byte {
 	bytes := make([]byte, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		bytes[i] = byte(rand.Intn(256))
 	}
 	return bytes
