@@ -1,6 +1,7 @@
-package pkg
+package scoring
 
 import (
+	"ffrancon/cryptopals-go/internal/utils"
 	"math"
 	"regexp"
 )
@@ -88,7 +89,7 @@ func IsBetterEnglishScore(score, best float64) bool {
 
 func ScoringECBMode(bytes []byte, keysize int) int {
 	score := 0
-	blocks := ChunkBytes(bytes, keysize)
+	blocks := utils.ChunkBytes(bytes, keysize)
 	areBlocksChecked := map[string]bool{}
 	for x, base := range blocks {
 		if exists := areBlocksChecked[string(base)]; !exists {

@@ -1,16 +1,18 @@
-package pkg
+package aes
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"ffrancon/cryptopals-go/internal/utils"
+	"ffrancon/cryptopals-go/internal/xor"
 	"fmt"
 	"os"
 )
 
 func getEncryptParams(key []byte, rawData []byte) (int, []byte, [][]byte) {
 	keySize := len(key)
-	pkcs7Padded := AddPKCS7Padding(rawData, keySize)
-	blocks := ChunkBytes(pkcs7Padded, keySize)
+	pkcs7Padded := utils.AddPKCS7Padding(rawData, keySize)
+	blocks := utils.ChunkBytes(pkcs7Padded, keySize)
 	output := make([]byte, len(pkcs7Padded))
 	return keySize, output, blocks
 }
@@ -35,7 +37,7 @@ func AESECBEncrypt(rawData, key []byte) []byte {
 
 func AESECBDecrypt(encryptedData, key []byte) []byte {
 	cipher := AESCipher(key)
-	blocks := ChunkBytes(encryptedData, 16)
+	blocks := utils.ChunkBytes(encryptedData, 16)
 	output := make([]byte, len(encryptedData))
 	for i, c := range blocks {
 		cipher.Decrypt(output[i*16:], c)
@@ -49,9 +51,9 @@ func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 	for i, block := range blocks {
 		switch i {
 		case 0:
-			cipher.Encrypt(output[:keySize], XorBytes(block, iv))
+			cipher.Encrypt(output[:keySize], xor.XorBytes(block, iv))
 		default:
-			cipher.Encrypt(output[i*keySize:], XorBytes(block, output[(i-1)*keySize:i*keySize]))
+			cipher.Encrypt(output[i*keySize:], xor.XorBytes(block, output[(i-1)*keySize:i*keySize]))
 		}
 	}
 	return output
@@ -60,16 +62,16 @@ func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 func AESCBCDecrypt(encryptedData, key, iv []byte) []byte {
 	cipher := AESCipher(key)
 	keySize := len(key)
-	blocks := ChunkBytes(encryptedData, keySize)
+	blocks := utils.ChunkBytes(encryptedData, keySize)
 	output := make([]byte, len(encryptedData))
 	decryptedBlock := make([]byte, keySize)
 	for i, c := range blocks {
 		cipher.Decrypt(decryptedBlock, c)
 		switch i {
 		case 0:
-			copy(output[:keySize], XorBytes(decryptedBlock, iv))
+			copy(output[:keySize], xor.XorBytes(decryptedBlock, iv))
 		default:
-			copy(output[i*keySize:], XorBytes(decryptedBlock, blocks[i-1]))
+			copy(output[i*keySize:], xor.XorBytes(decryptedBlock, blocks[i-1]))
 		}
 	}
 	return output

@@ -1,7 +1,10 @@
-package pkg
+package decrypt
 
 import (
 	"bufio"
+	"ffrancon/cryptopals-go/internal/encoding"
+	"ffrancon/cryptopals-go/internal/scoring"
+	"ffrancon/cryptopals-go/internal/xor"
 	"fmt"
 	"os"
 )
@@ -16,9 +19,9 @@ func DecryptXorSingleByte(bytes []byte, index int) (message ScoredMessage) {
 	message.Score = -1
 	for i := range 256 {
 		byte := byte(i)
-		xor := XorSingleByte(bytes, byte)
-		score := ScoringEnglish(xor)
-		if IsBetterEnglishScore(score, message.Score) {
+		xor := xor.XorSingleByte(bytes, byte)
+		score := scoring.ScoringEnglish(xor)
+		if scoring.IsBetterEnglishScore(score, message.Score) {
 			message = ScoredMessage{
 				Key:       byte,
 				Decrypted: xor,
@@ -40,13 +43,13 @@ func DecryptXorSingleByteFromBatchFile(path string) (message ScoredMessage) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		str := scanner.Text()
-		bytes, err := HexStrToBytes(str)
+		bytes, err := encoding.HexStrToBytes(str)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error converting hex string to bytes:", err)
 			os.Exit(1)
 		}
 		decryptedStr := DecryptXorSingleByte(bytes, 999)
-		if IsBetterEnglishScore(decryptedStr.Score, message.Score) {
+		if scoring.IsBetterEnglishScore(decryptedStr.Score, message.Score) {
 			message = decryptedStr
 		}
 	}

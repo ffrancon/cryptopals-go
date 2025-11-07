@@ -1,6 +1,7 @@
-package pkg
+package xor
 
 import (
+	"ffrancon/cryptopals-go/internal/encoding"
 	"fmt"
 )
 
@@ -21,12 +22,12 @@ func XorSingleByte(bytes []byte, by byte) []byte {
 }
 
 func XorHexStrings(string1, string2 string) (result string) {
-	bytes1, err := HexStrToBytes(string1)
+	bytes1, err := encoding.HexStrToBytes(string1)
 	if err != nil {
 		fmt.Println("Error converting hex string to bytes:", err)
 		return ""
 	}
-	bytes2, err := HexStrToBytes(string2)
+	bytes2, err := encoding.HexStrToBytes(string2)
 	if err != nil {
 		fmt.Println("Error converting hex string to bytes:", err)
 		return ""
@@ -36,7 +37,7 @@ func XorHexStrings(string1, string2 string) (result string) {
 		return ""
 	}
 	bytes := XorBytes(bytes1, bytes2)
-	return BytesToHexStr(bytes)
+	return encoding.BytesToHexStr(bytes)
 }
 
 func XorRepeatingKey(bytes, key []byte) []byte {

@@ -2,7 +2,10 @@ package main
 
 import (
 	"bytes"
-	"ffrancon/cryptopals-go/pkg"
+	"ffrancon/cryptopals-go/internal/aes"
+	"ffrancon/cryptopals-go/internal/encoding"
+	"ffrancon/cryptopals-go/internal/scoring"
+	"ffrancon/cryptopals-go/internal/utils"
 	"fmt"
 	"os"
 )
@@ -13,7 +16,7 @@ var b64SecretString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gb
 
 func encryptWithSecretString(bytes, secret, key []byte) []byte {
 	combined := append(bytes, secret...)
-	return pkg.AESECBEncrypt(combined, key)
+	return aes.AESECBEncrypt(combined, key)
 
 }
 
@@ -26,7 +29,7 @@ func findBlockCipherKeySize(bytes, key []byte) int {
 	slice := make([]byte, 0)
 	for i := range bytes {
 		slice = append(slice, bytes[i])
-		output := pkg.AESECBEncrypt(slice, key)
+		output := aes.AESECBEncrypt(slice, key)
 		// If the output length is different from the previous output length, we found the key size
 		if len(output) != prevLen && prevLen != 0 {
 			return i
@@ -42,21 +45,21 @@ func main() {
 	keysize := findBlockCipherKeySize(sample, key)
 
 	// Check if the encryption mode is ECB
-	isECBMode := pkg.ScoringECBMode(pkg.AESECBEncrypt(sample, key), keysize) > 0
+	isECBMode := scoring.ScoringECBMode(aes.AESECBEncrypt(sample, key), keysize) > 0
 	if !isECBMode {
 		fmt.Println("The encryption mode is CBC")
 		return
 	}
 
 	// Convert the base64 secret string to bytes
-	secret, err := pkg.Base64ToBytes(b64SecretString)
+	secret, err := encoding.Base64ToBytes(b64SecretString)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error converting base64 string to bytes: %v\n", err)
 		os.Exit(1)
 	}
 
 	result := make([]byte, len(secret))
-	chunks := pkg.ChunkBytes(secret, keysize)
+	chunks := utils.ChunkBytes(secret, keysize)
 
 	// For each chunk of the secret string
 	for _, c := range chunks {
@@ -75,7 +78,7 @@ func main() {
 				// Reconstruct the full block
 				reconstructed := append(block, chunk[:k]...)
 				reconstructed = append(reconstructed, byte(j))
-				encryptedReconstructed := pkg.AESECBEncrypt(reconstructed, key)
+				encryptedReconstructed := aes.AESECBEncrypt(reconstructed, key)
 				if bytes.Equal(encryptedBlock, encryptedReconstructed[:keysize]) {
 					chunk[k] = byte(j)
 					break
