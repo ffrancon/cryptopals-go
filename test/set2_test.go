@@ -15,7 +15,7 @@ func TestChallenge9(t *testing.T) {
 }
 
 func TestChallenge10(t *testing.T) {
-	data := pkg.ReadFile("../data/10.txt")
+	data := pkg.ReadFile("../testdata/10.txt")
 	bytes, err := pkg.Base64ToBytes(data)
 	if err != nil {
 		t.Errorf("error converting base64 to bytes: %v", err)

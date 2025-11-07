@@ -41,7 +41,7 @@ func TestChallenge3(t *testing.T) {
 }
 
 func TestChallenge4(t *testing.T) {
-	res := pkg.DecryptXorSingleByteFromBatchFile("../data/4.txt")
+	res := pkg.DecryptXorSingleByteFromBatchFile("../testdata/4.txt")
 	if string(res.Decrypted[:]) != "Now that the party is jumping\n" && res.Key != byte(53) {
 		t.Errorf("expected %s & %d, got %s & %d", "Now that the party is jumping\n", byte(53), res.Decrypted, res.Key)
 	}
@@ -57,7 +57,7 @@ func TestChallenge5(t *testing.T) {
 }
 
 func TestChallenge6(t *testing.T) {
-	data := pkg.ReadFile("../data/6.txt")
+	data := pkg.ReadFile("../testdata/6.txt")
 	bytes, err := pkg.Base64ToBytes(data)
 	if err != nil {
 		t.Errorf("Error converting base64 string to bytes: %v", err)
@@ -79,7 +79,7 @@ func TestChallenge6(t *testing.T) {
 }
 
 func TestChallenge7(t *testing.T) {
-	data := pkg.ReadFile("../data/7.txt")
+	data := pkg.ReadFile("../testdata/7.txt")
 	bytes, err := pkg.Base64ToBytes(data)
 	if err != nil {
 		t.Errorf("Error converting base64 string to bytes: %v", err)
@@ -93,7 +93,7 @@ func TestChallenge7(t *testing.T) {
 }
 
 func TestChallenge8(t *testing.T) {
-	file, err := os.Open("../data/8.txt")
+	file, err := os.Open("../testdata/8.txt")
 	if err != nil {
 		t.Fatalf("Error opening file: %v", err)
 	}
