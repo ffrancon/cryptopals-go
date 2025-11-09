@@ -58,3 +58,11 @@ func TestChallenge11(t *testing.T) {
 	}
 	t.Logf("Detection results over 200 iterations: ECB=%d, CBC=%d", ecb, cbc)
 }
+
+func TestChallenge12(t *testing.T) {
+	decrypted := oracle.AESECBOracle()
+	expectedSubstring := "Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n"
+	if !bytes.Contains(decrypted, []byte(expectedSubstring)) {
+		t.Errorf("Decrypted string does not contain expected substring.\nExpected to find: %q\nDecrypted: %q", expectedSubstring, decrypted)
+	}
+}
