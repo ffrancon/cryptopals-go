@@ -81,3 +81,35 @@ func TestChallenge13(t *testing.T) {
 		t.Errorf("Expected role to be admin, got %s", profileMap["role"])
 	}
 }
+
+func TestChallenge14(t *testing.T) {
+	// TODO
+}
+
+func TestChallenge15(t *testing.T) {
+	validPadded := []byte("ICE ICE BABY\x04\x04\x04\x04")
+	invalidPadded := []byte("ICE ICE BABY\x05\x05\x05\x05")
+	invalidPadded2 := []byte("ICE ICE BABY\x01\x02\x03\x04")
+
+	// Test valid padding
+	unpadded, err := utils.ValidateAndRemovePKCS7Padding(validPadded)
+	if err != nil {
+		t.Errorf("Expected valid padding, got error: %v", err)
+	}
+	expectedUnpadded := []byte("ICE ICE BABY")
+	if !bytes.Equal(unpadded, expectedUnpadded) {
+		t.Errorf("Expected unpadded to be %v, got %v", expectedUnpadded, unpadded)
+	}
+
+	// Test invalid padding (case 1)
+	_, err = utils.ValidateAndRemovePKCS7Padding(invalidPadded)
+	if err == nil {
+		t.Errorf("Expected error for invalid padding, got nil")
+	}
+
+	// Test invalid padding (case 2)
+	_, err = utils.ValidateAndRemovePKCS7Padding(invalidPadded2)
+	if err == nil {
+		t.Errorf("Expected error for invalid padding, got nil")
+	}
+}

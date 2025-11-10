@@ -101,6 +101,23 @@ func AddPKCS7Padding(bytes []byte, size int) []byte {
 	return bytes
 }
 
+func ValidateAndRemovePKCS7Padding(bytes []byte) ([]byte, error) {
+	if len(bytes) == 0 {
+		return nil, errors.New("cannot validate padding of empty byte array")
+	}
+	paddingLen := int(bytes[len(bytes)-1])
+	if paddingLen == 0 || paddingLen > len(bytes) {
+		return nil, errors.New("invalid padding length")
+	}
+	// Check all padding bytes match the padding length
+	for i := len(bytes) - paddingLen; i < len(bytes); i++ {
+		if bytes[i] != byte(paddingLen) {
+			return nil, errors.New("padding bytes not matching padding length")
+		}
+	}
+	return bytes[:len(bytes)-paddingLen], nil
+}
+
 func GenerateRandomBytes(size int) []byte {
 	bytes := make([]byte, size)
 	for i := range size {
