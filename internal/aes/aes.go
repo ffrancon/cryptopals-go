@@ -36,11 +36,12 @@ func AESECBEncrypt(rawData, key []byte) []byte {
 }
 
 func AESECBDecrypt(encryptedData, key []byte) []byte {
+	ks := len(key)
 	cipher := AESCipher(key)
-	blocks := utils.ChunkBytes(encryptedData, 16)
+	blocks := utils.ChunkBytes(encryptedData, ks)
 	output := make([]byte, len(encryptedData))
 	for i, c := range blocks {
-		cipher.Decrypt(output[i*16:], c)
+		cipher.Decrypt(output[i*ks:], c)
 	}
 	return output
 }

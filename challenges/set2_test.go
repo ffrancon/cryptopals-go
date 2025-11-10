@@ -66,3 +66,18 @@ func TestChallenge12(t *testing.T) {
 		t.Errorf("Decrypted string does not contain expected substring.\nExpected to find: %q\nDecrypted: %q", expectedSubstring, decrypted)
 	}
 }
+
+func TestChallenge13(t *testing.T) {
+	profile := oracle.AESECBCutAndPasteAttack("crack@bar.com")
+	profileMap := oracle.QueryStringToMap(profile)
+	if profileMap["email"] != "crack@bar.com" {
+		t.Errorf("Expected email to be crack@bar.com, got %s", profileMap["email"])
+	}
+	if profileMap["uid"] != "10" {
+		t.Errorf("Expected uid to be 10, got %s", profileMap["uid"])
+	}
+	// The role should now be "admin" with proper PKCS#7 padding
+	if profileMap["role"] != "admin\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b" {
+		t.Errorf("Expected role to be admin, got %s", profileMap["role"])
+	}
+}
