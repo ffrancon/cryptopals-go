@@ -7,7 +7,6 @@ import (
 	"ffrancon/cryptopals-go/internal/scoring"
 	"ffrancon/cryptopals-go/internal/utils"
 	"fmt"
-	"os"
 )
 
 var b64SecretString = "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
@@ -40,29 +39,7 @@ func (o *SecretOracle) findAESKeySize() int {
 	return 0
 }
 
-func AESECBOracle() (decrypted []byte) {
-	oracle := NewSecretOracle()
-
-	keysize := oracle.findAESKeySize()
-	if keysize == 0 {
-		fmt.Println("Could not determine key size")
-		return
-	}
-
-	// Check if the encryption mode is ECB
-	isECBMode := scoring.ScoringECBMode(aes.AESECBEncrypt(bytes.Repeat([]byte("A"), keysize*2), oracle.key), keysize) > 0
-	if !isECBMode {
-		fmt.Println("The encryption mode is CBC")
-		return
-	}
-
-	// Convert the base64 secret string to bytes
-	secret, err := encoding.Base64ToBytes(b64SecretString)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error converting base64 string to bytes: %v\n", err)
-		os.Exit(1)
-	}
-
+func (o *SecretOracle) breakSecretString(secret []byte, keysize int) (decrypted []byte) {
 	chunks := utils.ChunkBytes(secret, keysize)
 
 	// For each chunk of the secret string
@@ -76,13 +53,13 @@ func AESECBOracle() (decrypted []byte) {
 			}
 			// This block is i byte(s) short of the keysize
 			block := make([]byte, keysize-1-k)
-			encryptedBlock := oracle.encryptWithSecretString(block, c)[:keysize]
+			encryptedBlock := o.encryptWithSecretString(block, c)[:keysize]
 			// We will test all the possible values for the last byte of the block until we find the one that matches the encrypted block
 			for j := range 256 {
 				// Reconstruct the full block
 				reconstructed := append(block, chunk[:k]...)
 				reconstructed = append(reconstructed, byte(j))
-				encryptedReconstructed := aes.AESECBEncrypt(reconstructed, oracle.key)
+				encryptedReconstructed := aes.AESECBEncrypt(reconstructed, o.key)
 				if bytes.Equal(encryptedBlock, encryptedReconstructed[:keysize]) {
 					chunk[k] = byte(j)
 					break
@@ -92,4 +69,27 @@ func AESECBOracle() (decrypted []byte) {
 		decrypted = append(decrypted, chunk...)
 	}
 	return decrypted
+}
+
+func AESECBOracle() ([]byte, error) {
+	oracle := NewSecretOracle()
+
+	keysize := oracle.findAESKeySize()
+	if keysize == 0 {
+		return nil, fmt.Errorf("could not determine key size")
+	}
+
+	// Check if the encryption mode is ECB
+	isECBMode := scoring.ScoringECBMode(aes.AESECBEncrypt(bytes.Repeat([]byte("A"), keysize*2), oracle.key), keysize) > 0
+	if !isECBMode {
+		return nil, fmt.Errorf("encryption mode is not ECB")
+	}
+
+	// Convert the base64 secret string to bytes
+	secret, err := encoding.Base64ToBytes(b64SecretString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode secret string: %w", err)
+	}
+
+	return oracle.breakSecretString(secret, keysize), nil
 }

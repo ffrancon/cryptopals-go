@@ -60,7 +60,11 @@ func TestChallenge11(t *testing.T) {
 }
 
 func TestChallenge12(t *testing.T) {
-	decrypted := oracle.AESECBOracle()
+	decrypted, err := oracle.AESECBOracle()
+	if err != nil {
+		t.Errorf("Error in AESECBOracle: %v", err)
+		return
+	}
 	expectedSubstring := "Rollin' in my 5.0\nWith my rag-top down so my hair can blow\nThe girlies on standby waving just to say hi\nDid you stop? No, I just drove by\n"
 	if !bytes.Contains(decrypted, []byte(expectedSubstring)) {
 		t.Errorf("Decrypted string does not contain expected substring.\nExpected to find: %q\nDecrypted: %q", expectedSubstring, decrypted)
@@ -68,7 +72,11 @@ func TestChallenge12(t *testing.T) {
 }
 
 func TestChallenge13(t *testing.T) {
-	profile := oracle.AESECBCutAndPasteAttack("crack@bar.com")
+	profile, err := oracle.AESECBCutAndPasteAttack("crack@bar.com")
+	if err != nil {
+		t.Errorf("Error in AESECBCutAndPasteAttack: %v", err)
+		return
+	}
 	profileMap := oracle.QueryStringToMap(profile)
 	if profileMap["email"] != "crack@bar.com" {
 		t.Errorf("Expected email to be crack@bar.com, got %s", profileMap["email"])

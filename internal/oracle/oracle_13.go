@@ -51,11 +51,10 @@ func (o *ProfileOracle) Decrypt(ciphertext []byte) []byte {
 	return aes.AESECBDecrypt(ciphertext, o.key)
 }
 
-func AESECBCutAndPasteAttack(email string) string {
+func AESECBCutAndPasteAttack(email string) (string, error) {
 	// Email must be chosen precisely so that "admin" is at the start of a block after padding
 	if len(email) != 13 {
-		fmt.Fprintln(os.Stderr, "Email must be 13 characters long for this attack")
-		os.Exit(1)
+		return "", fmt.Errorf("email must be 13 characters long for this attack")
 	}
 
 	oracle := NewProfileOracle()
@@ -74,5 +73,5 @@ func AESECBCutAndPasteAttack(email string) string {
 	reconstructed := utils.FlattenBytesChunks(chunkedCiphertext)
 	profile := oracle.Decrypt(reconstructed)
 
-	return string(profile)
+	return string(profile), nil
 }
