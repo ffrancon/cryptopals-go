@@ -25,7 +25,7 @@ func (o *SecretOracle) encryptWithSecretString(bytes, secret []byte) ([]byte, er
 	combined := append(bytes, secret...)
 	encrypted, err := aes.AESECBEncrypt(combined, o.key)
 	if err != nil {
-		return nil, fmt.Errorf("error during encryption: %w", err)
+		return nil, err
 	}
 	return encrypted, nil
 }
@@ -35,7 +35,7 @@ func (o *SecretOracle) findAESKeySize() (int, error) {
 	for i := range 32 {
 		output, err := aes.AESECBEncrypt(bytes.Repeat([]byte("A"), i+1), o.key)
 		if err != nil {
-			return 0, fmt.Errorf("error during encryption: %w", err)
+			return 0, err
 		}
 		// If the output length is different from the previous output length, we found the key size
 		if len(output) != prevLen && prevLen != 0 {
@@ -62,19 +62,19 @@ func (o *SecretOracle) breakSecretString(secret []byte, keysize int) (decrypted 
 			block := make([]byte, keysize-1-k)
 			encryptedBlock, err := o.encryptWithSecretString(block, c)
 			if err != nil {
-				return nil, fmt.Errorf("error during encryption: %w", err)
+				return nil, err
 			}
 			// We will test all the possible values for the last byte of the block until we find the one that matches the encrypted block
-			for j := range 256 {
+			for b := range 256 {
 				// Reconstruct the full block
 				reconstructed := append(block, chunk[:k]...)
-				reconstructed = append(reconstructed, byte(j))
+				reconstructed = append(reconstructed, byte(b))
 				encryptedReconstructed, err := aes.AESECBEncrypt(reconstructed, o.key)
 				if err != nil {
-					return nil, fmt.Errorf("error during encryption: %w", err)
+					return nil, err
 				}
 				if bytes.Equal(encryptedBlock, encryptedReconstructed[:keysize]) {
-					chunk[k] = byte(j)
+					chunk[k] = byte(b)
 					break
 				}
 			}
@@ -92,22 +92,20 @@ func AESECBOracle() ([]byte, error) {
 		return nil, fmt.Errorf("could not determine key size: %w", err)
 	}
 
-	// Check if the encryption mode is ECB
-
-	encryptedData, err := aes.AESECBEncrypt(bytes.Repeat([]byte("A"), keysize*2), oracle.key)
+	// Validate that the encryption mode is ECB (useless but required by the exercise)
+	encrypted, err := aes.AESECBEncrypt(bytes.Repeat([]byte("A"), keysize*2), oracle.key)
 	if err != nil {
 		return nil, fmt.Errorf("error during encryption: %w", err)
 	}
-	isECBMode := scoring.ScoringECBMode(encryptedData, keysize) > 0
+	isECBMode := scoring.ScoringECBMode(encrypted, keysize) > 0
 	if !isECBMode {
 		return nil, fmt.Errorf("encryption mode is not ECB")
 	}
-	// Convert the base64 secret string to bytes
+
 	secret, err := encoding.Base64ToBytes(b64SecretString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode secret string: %w", err)
 	}
-
 	plaintext, err := oracle.breakSecretString(secret, keysize)
 	if err != nil {
 		return nil, fmt.Errorf("could not break secret string: %w", err)
