@@ -5,8 +5,6 @@ import (
 	"crypto/cipher"
 	"ffrancon/cryptopals-go/internal/utils"
 	"ffrancon/cryptopals-go/internal/xor"
-	"fmt"
-	"os"
 )
 
 func getEncryptParams(key []byte, rawData []byte) (int, []byte, [][]byte) {
@@ -17,37 +15,45 @@ func getEncryptParams(key []byte, rawData []byte) (int, []byte, [][]byte) {
 	return keySize, output, blocks
 }
 
-func AESCipher(key []byte) (cipher cipher.Block) {
-	cipher, err := aes.NewCipher(key)
+func AESCipher(key []byte) (cipher cipher.Block, err error) {
+	cipher, err = aes.NewCipher(key)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating AES cipher: %v\n", err)
-		os.Exit(1)
+		return nil, err
 	}
-	return cipher
+	return cipher, nil
 }
 
-func AESECBEncrypt(rawData, key []byte) []byte {
-	cipher := AESCipher(key)
+func AESECBEncrypt(rawData, key []byte) ([]byte, error) {
+	cipher, err := AESCipher(key)
+	if err != nil {
+		return nil, err
+	}
 	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, c := range blocks {
 		cipher.Encrypt(output[i*keySize:], c)
 	}
-	return output
+	return output, nil
 }
 
-func AESECBDecrypt(encryptedData, key []byte) []byte {
+func AESECBDecrypt(encryptedData, key []byte) ([]byte, error) {
 	ks := len(key)
-	cipher := AESCipher(key)
+	cipher, err := AESCipher(key)
+	if err != nil {
+		return nil, err
+	}
 	blocks := utils.ChunkBytes(encryptedData, ks)
 	output := make([]byte, len(encryptedData))
 	for i, c := range blocks {
 		cipher.Decrypt(output[i*ks:], c)
 	}
-	return output
+	return output, nil
 }
 
-func AESCBCEncrypt(rawData, key, iv []byte) []byte {
-	cipher := AESCipher(key)
+func AESCBCEncrypt(rawData, key, iv []byte) ([]byte, error) {
+	cipher, err := AESCipher(key)
+	if err != nil {
+		return nil, err
+	}
 	keySize, output, blocks := getEncryptParams(key, rawData)
 	for i, block := range blocks {
 		switch i {
@@ -57,11 +63,14 @@ func AESCBCEncrypt(rawData, key, iv []byte) []byte {
 			cipher.Encrypt(output[i*keySize:], xor.XorBytes(block, output[(i-1)*keySize:i*keySize]))
 		}
 	}
-	return output
+	return output, nil
 }
 
-func AESCBCDecrypt(encryptedData, key, iv []byte) []byte {
-	cipher := AESCipher(key)
+func AESCBCDecrypt(encryptedData, key, iv []byte) ([]byte, error) {
+	cipher, err := AESCipher(key)
+	if err != nil {
+		return nil, err
+	}
 	keySize := len(key)
 	blocks := utils.ChunkBytes(encryptedData, keySize)
 	output := make([]byte, len(encryptedData))
@@ -75,5 +84,5 @@ func AESCBCDecrypt(encryptedData, key, iv []byte) []byte {
 			copy(output[i*keySize:], xor.XorBytes(decryptedBlock, blocks[i-1]))
 		}
 	}
-	return output
+	return output, nil
 }

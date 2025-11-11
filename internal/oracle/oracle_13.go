@@ -2,10 +2,10 @@ package oracle
 
 import (
 	"bytes"
+	"errors"
 	"ffrancon/cryptopals-go/internal/aes"
 	"ffrancon/cryptopals-go/internal/utils"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -34,21 +34,31 @@ func NewProfileOracle() *ProfileOracle {
 	}
 }
 
-func (o *ProfileOracle) generateUserProfile(email string) string {
+func (o *ProfileOracle) generateUserProfile(email string) (string, error) {
 	if !emailRe.MatchString(email) {
-		fmt.Fprintln(os.Stderr, "Invalid email format")
-		os.Exit(1)
+		return "", errors.New("invalid email format")
 	}
-	return "email=" + email + "&uid=10&role=user"
+	return "email=" + email + "&uid=10&role=user", nil
 }
 
-func (o *ProfileOracle) Encrypt(email string) []byte {
-	profile := o.generateUserProfile(email)
-	return aes.AESECBEncrypt([]byte(profile), o.key)
+func (o *ProfileOracle) Encrypt(email string) ([]byte, error) {
+	profile, err := o.generateUserProfile(email)
+	if err != nil {
+		return nil, err
+	}
+	encrypted, err := aes.AESECBEncrypt([]byte(profile), o.key)
+	if err != nil {
+		return nil, err
+	}
+	return encrypted, nil
 }
 
-func (o *ProfileOracle) Decrypt(ciphertext []byte) []byte {
-	return aes.AESECBDecrypt(ciphertext, o.key)
+func (o *ProfileOracle) Decrypt(ciphertext []byte) ([]byte, error) {
+	decrypted, err := aes.AESECBDecrypt(ciphertext, o.key)
+	if err != nil {
+		return nil, err
+	}
+	return decrypted, nil
 }
 
 func AESECBCutAndPasteAttack(email string) (string, error) {
@@ -59,11 +69,16 @@ func AESECBCutAndPasteAttack(email string) (string, error) {
 
 	oracle := NewProfileOracle()
 
-	ciphertext := oracle.Encrypt(email)
+	ciphertext, err := oracle.Encrypt(email)
+	if err != nil {
+		return "", fmt.Errorf("encryption error: %v", err)
+	}
 
 	// Right sized random email + admin + 11 bytes of padding for valid PKCS#7
-	corrupted := oracle.Encrypt("aaaaaa@b.cadmin" + string(bytes.Repeat([]byte{11}, 11)))
-
+	corrupted, err := oracle.Encrypt("aaaaaa@b.cadmin" + string(bytes.Repeat([]byte{11}, 11)))
+	if err != nil {
+		return "", fmt.Errorf("encryption error: %v", err)
+	}
 	// Rebuild ciphertext to have "role=admin" block positioned correctly
 	chunkedCiphertext := utils.ChunkBytes(ciphertext, 16)
 	chunkedCorrupted := utils.ChunkBytes(corrupted, 16)
@@ -71,7 +86,10 @@ func AESECBCutAndPasteAttack(email string) (string, error) {
 
 	// Decrypt modified ciphertext
 	reconstructed := utils.FlattenBytesChunks(chunkedCiphertext)
-	profile := oracle.Decrypt(reconstructed)
+	profile, err := oracle.Decrypt(reconstructed)
+	if err != nil {
+		return "", fmt.Errorf("decryption error: %v", err)
+	}
 
 	return string(profile), nil
 }

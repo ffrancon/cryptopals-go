@@ -90,7 +90,11 @@ func TestChallenge7(t *testing.T) {
 		t.Errorf("Error converting base64 string to bytes: %v", err)
 	}
 	key := []byte("YELLOW SUBMARINE")
-	decrypted := aes.AESECBDecrypt(bytes, key)
+	decrypted, err := aes.AESECBDecrypt(bytes, key)
+	if err != nil {
+		t.Errorf("error decrypting AES ECB: %v", err)
+		return
+	}
 	reg := regexp.MustCompile(`You thought that I was weak, Boy, you're dead wrong`)
 	if !reg.Match(decrypted) {
 		t.Errorf("expected %s, got %s", reg, decrypted)

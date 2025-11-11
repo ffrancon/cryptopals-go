@@ -26,7 +26,11 @@ func TestChallenge10(t *testing.T) {
 	}
 	key := []byte("YELLOW SUBMARINE")
 	iv := make([]byte, 16)
-	decrypted := aes.AESCBCDecrypt(bytes, key, iv)
+	decrypted, err := aes.AESCBCDecrypt(bytes, key, iv)
+	if err != nil {
+		t.Errorf("error decrypting AES CBC: %v", err)
+		return
+	}
 	reg := regexp.MustCompile(`You thought that I was weak, Boy, you're dead wrong`)
 	if !reg.Match(decrypted) {
 		t.Errorf("expected %s, got %s", reg, decrypted)
@@ -39,7 +43,11 @@ func TestChallenge11(t *testing.T) {
 	ecb := 0
 	cbc := 0
 	for range 200 {
-		result := oracle.AESECBOrCBCOracle(input)
+		result, err := oracle.AESECBOrCBCOracle(input)
+		if err != nil {
+			t.Errorf("error in AESECBOrCBCOracle: %v", err)
+			return
+		}
 		switch result {
 		case "ECB":
 			ecb++

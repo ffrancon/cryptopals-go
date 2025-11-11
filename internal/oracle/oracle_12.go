@@ -21,25 +21,32 @@ func NewSecretOracle() *SecretOracle {
 	}
 }
 
-func (o *SecretOracle) encryptWithSecretString(bytes, secret []byte) []byte {
+func (o *SecretOracle) encryptWithSecretString(bytes, secret []byte) ([]byte, error) {
 	combined := append(bytes, secret...)
-	return aes.AESECBEncrypt(combined, o.key)
+	encrypted, err := aes.AESECBEncrypt(combined, o.key)
+	if err != nil {
+		return nil, fmt.Errorf("error during encryption: %w", err)
+	}
+	return encrypted, nil
 }
 
-func (o *SecretOracle) findAESKeySize() int {
+func (o *SecretOracle) findAESKeySize() (int, error) {
 	prevLen := 0
 	for i := range 32 {
-		output := aes.AESECBEncrypt(bytes.Repeat([]byte("A"), i+1), o.key)
+		output, err := aes.AESECBEncrypt(bytes.Repeat([]byte("A"), i+1), o.key)
+		if err != nil {
+			return 0, fmt.Errorf("error during encryption: %w", err)
+		}
 		// If the output length is different from the previous output length, we found the key size
 		if len(output) != prevLen && prevLen != 0 {
-			return i
+			return i, nil
 		}
 		prevLen = len(output)
 	}
-	return 0
+	return 0, fmt.Errorf("could not determine key size")
 }
 
-func (o *SecretOracle) breakSecretString(secret []byte, keysize int) (decrypted []byte) {
+func (o *SecretOracle) breakSecretString(secret []byte, keysize int) (decrypted []byte, err error) {
 	chunks := utils.ChunkBytes(secret, keysize)
 
 	// For each chunk of the secret string
@@ -53,13 +60,19 @@ func (o *SecretOracle) breakSecretString(secret []byte, keysize int) (decrypted 
 			}
 			// This block is i byte(s) short of the keysize
 			block := make([]byte, keysize-1-k)
-			encryptedBlock := o.encryptWithSecretString(block, c)[:keysize]
+			encryptedBlock, err := o.encryptWithSecretString(block, c)
+			if err != nil {
+				return nil, fmt.Errorf("error during encryption: %w", err)
+			}
 			// We will test all the possible values for the last byte of the block until we find the one that matches the encrypted block
 			for j := range 256 {
 				// Reconstruct the full block
 				reconstructed := append(block, chunk[:k]...)
 				reconstructed = append(reconstructed, byte(j))
-				encryptedReconstructed := aes.AESECBEncrypt(reconstructed, o.key)
+				encryptedReconstructed, err := aes.AESECBEncrypt(reconstructed, o.key)
+				if err != nil {
+					return nil, fmt.Errorf("error during encryption: %w", err)
+				}
 				if bytes.Equal(encryptedBlock, encryptedReconstructed[:keysize]) {
 					chunk[k] = byte(j)
 					break
@@ -68,28 +81,37 @@ func (o *SecretOracle) breakSecretString(secret []byte, keysize int) (decrypted 
 		}
 		decrypted = append(decrypted, chunk...)
 	}
-	return decrypted
+	return decrypted, nil
 }
 
 func AESECBOracle() ([]byte, error) {
 	oracle := NewSecretOracle()
 
-	keysize := oracle.findAESKeySize()
-	if keysize == 0 {
-		return nil, fmt.Errorf("could not determine key size")
+	keysize, err := oracle.findAESKeySize()
+	if err != nil {
+		return nil, fmt.Errorf("could not determine key size: %w", err)
 	}
 
 	// Check if the encryption mode is ECB
-	isECBMode := scoring.ScoringECBMode(aes.AESECBEncrypt(bytes.Repeat([]byte("A"), keysize*2), oracle.key), keysize) > 0
+
+	encryptedData, err := aes.AESECBEncrypt(bytes.Repeat([]byte("A"), keysize*2), oracle.key)
+	if err != nil {
+		return nil, fmt.Errorf("error during encryption: %w", err)
+	}
+	isECBMode := scoring.ScoringECBMode(encryptedData, keysize) > 0
 	if !isECBMode {
 		return nil, fmt.Errorf("encryption mode is not ECB")
 	}
-
 	// Convert the base64 secret string to bytes
 	secret, err := encoding.Base64ToBytes(b64SecretString)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode secret string: %w", err)
 	}
 
-	return oracle.breakSecretString(secret, keysize), nil
+	plaintext, err := oracle.breakSecretString(secret, keysize)
+	if err != nil {
+		return nil, fmt.Errorf("could not break secret string: %w", err)
+	}
+
+	return plaintext, nil
 }
